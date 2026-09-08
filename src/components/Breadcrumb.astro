@@ -1,0 +1,51 @@
+---
+import { SITE } from "../site.config";
+
+interface Crumb {
+  name: string;
+  href?: string;
+}
+interface Props {
+  items: Crumb[];
+}
+const { items } = Astro.props;
+
+// JSON-LD BreadcrumbList (구조화 데이터)
+const jsonld = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [{ name: "홈", href: "/" }, ...items].map((c, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: c.name,
+    ...(c.href ? { item: new URL(c.href, SITE.url).href } : {}),
+  })),
+};
+---
+
+<nav class="breadcrumb" aria-label="현재 위치">
+  <a href="/">홈</a>
+  {items.map((c) => (
+    <>
+      <span class="sep" aria-hidden="true">›</span>
+      {c.href ? <a href={c.href}>{c.name}</a> : <span aria-current="page">{c.name}</span>}
+    </>
+  ))}
+</nav>
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonld)} />
+
+<style>
+  .breadcrumb {
+    font-size: 13.5px;
+    color: var(--text-mute);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 20px 0 12px;
+  }
+  .breadcrumb a { color: var(--text-soft); }
+  .breadcrumb .sep { color: var(--text-mute); }
+  .breadcrumb [aria-current] { color: var(--text); }
+</style>

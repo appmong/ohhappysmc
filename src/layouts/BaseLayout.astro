@@ -1,0 +1,117 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import BackToTop from "../components/BackToTop.astro";
+import { SITE, VERIFICATION, ADSENSE, ANALYTICS } from "../site.config";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** OpenGraph 이미지 절대경로 (public/og/...) */
+  ogImage?: string;
+  /** 검색엔진 색인 제외 */
+  noindex?: boolean;
+  /** <body>에 붙일 클래스 */
+  bodyClass?: string;
+  /** 정규 URL(canonical) 경로. 미지정 시 현재 경로 */
+  canonicalPath?: string;
+}
+
+const {
+  title,
+  description = SITE.description,
+  ogImage = "/og/home.png",
+  noindex = false,
+  bodyClass = "",
+  canonicalPath,
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, SITE.url).href;
+const ogAbs = new URL(ogImage, SITE.url).href;
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* 테마 선적용 (깜빡임 방지): 저장된 선택이 있으면 페인트 전에 반영 */}
+    <script is:inline set:html={`(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`}></script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="canonical" href={canonical} />
+
+    {/* 모바일 브라우저 상단바 색 (라이트/다크) */}
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+
+    {/* 웹폰트 Pretendard (동적 서브셋 — 한글 필요한 글자만 로드) */}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+    />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    {/* 검색엔진 인증 */}
+    {VERIFICATION.google && <meta name="google-site-verification" content={VERIFICATION.google} />}
+    {VERIFICATION.naver && <meta name="naver-site-verification" content={VERIFICATION.naver} />}
+
+    {/* OpenGraph / Twitter */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogAbs} />
+    <meta property="og:locale" content="ko_KR" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/rss.xml" />
+
+    {/* 애드센스: clientId가 있을 때만 로드 (승인 후 값 입력) */}
+    {ADSENSE.clientId && (
+      <script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE.clientId}`}
+        crossorigin="anonymous"
+      ></script>
+    )}
+
+    {/* 구글 애널리틱스(GA4): 측정 ID가 있을 때만 로드 */}
+    {ANALYTICS.google && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${ANALYTICS.google}`} is:inline></script>
+        <script
+          is:inline
+          set:html={`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${ANALYTICS.google}');`}
+        ></script>
+      </>
+    )}
+
+    {/* 네이버 애널리틱스(웹로그분석): wa 값이 있을 때만 로드 */}
+    {ANALYTICS.naver && (
+      <>
+        <script type="text/javascript" src="//wcs.pstatic.net/wcslog.js" is:inline></script>
+        <script
+          type="text/javascript"
+          is:inline
+          set:html={`if(!wcs_add) var wcs_add = {}; wcs_add["wa"] = "${ANALYTICS.naver}"; if(window.wcs) { wcs_do(); }`}
+        ></script>
+      </>
+    )}
+  </head>
+  <body class={bodyClass}>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+    <BackToTop />
+  </body>
+</html>

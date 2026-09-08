@@ -1,0 +1,33 @@
+---
+import type { Author } from "../site.config";
+
+interface Props {
+  author: Author;
+}
+const { author } = Astro.props;
+const initial = author.name.slice(0, 1);
+---
+
+<section class="authorbox card" aria-label="글쓴이 소개">
+  <div class="avatar" aria-hidden="true">{initial}</div>
+  <div class="body">
+    <p class="name">{author.name}</p>
+    <p class="bio">{author.bio}</p>
+    <p class="contact">
+      오류·제보는 <a href={`mailto:${author.email}`}>{author.email}</a> 로 알려주세요.
+    </p>
+  </div>
+</section>
+
+<style>
+  .authorbox { display: flex; gap: 16px; padding: 18px 20px; margin: 28px 0; align-items: flex-start; }
+  .avatar {
+    flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent-ink);
+    display: grid; place-items: center; font-weight: 800; font-size: 20px;
+  }
+  .body { display: grid; gap: 4px; }
+  .name { font-weight: 800; margin: 0; }
+  .bio { margin: 0; color: var(--text-soft); font-size: 14.5px; }
+  .contact { margin: 4px 0 0; font-size: 13px; color: var(--text-mute); }
+</style>

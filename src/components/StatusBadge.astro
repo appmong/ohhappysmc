@@ -1,0 +1,16 @@
+---
+interface Props {
+  status: "상시" | "진행중" | "마감임박" | "마감";
+}
+const { status } = Astro.props;
+
+const map: Record<string, { cls: string; label: string }> = {
+  상시: { cls: "ok", label: "상시" },
+  진행중: { cls: "ok", label: "진행중" },
+  마감임박: { cls: "danger", label: "마감임박" },
+  마감: { cls: "", label: "마감" },
+};
+const { cls, label } = map[status] ?? map["상시"];
+---
+
+<span class={`badge ${cls}`}>{label}</span>

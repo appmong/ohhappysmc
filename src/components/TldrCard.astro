@@ -1,0 +1,43 @@
+---
+interface QA {
+  q: string;
+  a: string;
+}
+interface Props {
+  items: QA[];
+}
+const { items } = Astro.props;
+const show = Array.isArray(items) && items.length > 0;
+---
+
+{show && (
+<aside class="tldr card" aria-label="결론부터 요약">
+  <div class="tldr-head">
+    <span class="tag">결론부터</span>
+  </div>
+  <dl>
+    {items.map((it) => (
+      <div class="row">
+        <dt>{it.q}</dt>
+        <dd>{it.a}</dd>
+      </div>
+    ))}
+  </dl>
+</aside>
+)}
+
+<style>
+  .tldr { padding: 18px 20px; margin: 22px 0; border-left: 4px solid var(--accent); }
+  .tldr-head { margin-bottom: 8px; }
+  .tag {
+    display: inline-block; font-size: 12.5px; font-weight: 800; letter-spacing: 0.02em;
+    color: var(--accent-ink); background: var(--accent-soft);
+    padding: 3px 10px; border-radius: 999px;
+  }
+  dl { margin: 0; display: grid; gap: 12px; }
+  .row { display: grid; gap: 3px; }
+  dt { font-weight: 700; font-size: 15.5px; color: var(--text); }
+  dt::before { content: "Q. "; color: var(--accent); font-weight: 800; }
+  dd { margin: 0; color: var(--text-soft); font-size: 15.5px; }
+  dd::before { content: "A. "; color: var(--text-mute); font-weight: 800; }
+</style>

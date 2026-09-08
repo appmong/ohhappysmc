@@ -1,0 +1,46 @@
+---
+import { postUrl } from "../lib/utils";
+import { CATEGORY_MAP } from "../site.config";
+
+interface Item {
+  id: string;
+  category: string;
+  title: string;
+}
+interface Props {
+  items: Item[];
+  title?: string;
+}
+const { items, title = "같이 보면 좋은 글" } = Astro.props;
+const show = Array.isArray(items) && items.length > 0;
+---
+
+{show && (
+<section class="related" aria-label={title}>
+  <h2 class="rel-title">{title}</h2>
+  <ul>
+    {items.map((it) => (
+      <li>
+        <a href={postUrl(it.category, it.id)}>
+          <span class="cat">{CATEGORY_MAP[it.category]?.name ?? it.category}</span>
+          <span class="t">{it.title}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>
+)}
+
+<style>
+  .related { margin: 40px 0 8px; }
+  .rel-title { font-size: 18px; margin: 0 0 12px; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-card); color: var(--text);
+  }
+  li a:hover { border-color: var(--accent); text-decoration: none; }
+  .cat { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+  .t { font-size: 15px; }
+</style>

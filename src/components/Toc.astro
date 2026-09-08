@@ -1,0 +1,31 @@
+---
+interface Heading {
+  text: string;
+  slug: string;
+}
+interface Props {
+  headings: Heading[];
+}
+const { headings } = Astro.props;
+const show = Array.isArray(headings) && headings.length >= 3;
+---
+
+{show && (
+<nav class="toc card" aria-label="목차">
+  <p class="toc-title">목차</p>
+  <ol>
+    {headings.map((h) => (
+      <li><a href={`#${h.slug}`}>{h.text}</a></li>
+    ))}
+  </ol>
+</nav>
+)}
+
+<style>
+  .toc { padding: 16px 20px; margin: 22px 0; background: var(--bg-soft); }
+  .toc-title { font-weight: 800; font-size: 14px; margin: 0 0 8px; color: var(--text-soft); }
+  ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  li { font-size: 15px; }
+  li a { color: var(--text-soft); }
+  li a:hover { color: var(--accent); }
+</style>

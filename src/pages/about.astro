@@ -1,0 +1,52 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE, AUTHORS, EDITORIAL_PRINCIPLES, ADSENSE } from "../site.config";
+
+const author = Object.values(AUTHORS)[0];
+---
+
+<BaseLayout title="소개" description={`${SITE.name}는 어떤 곳이고 누가 쓰는지 소개합니다.`}>
+  <article class="container prose">
+    <h1>소개</h1>
+    <p class="lead">{SITE.tagline}</p>
+
+    <h2>어떤 곳인가요</h2>
+    <p>
+      {SITE.name}는 복잡한 제도·규정·혜택을 <strong>원문으로 직접 확인해서</strong>, 처음 보는 사람도
+      이해할 수 있는 쉬운 말로 정리하는 곳이에요. 광고 문구나 카더라가 아니라, 법령과 기관 공고를
+      근거로 삼아요.
+    </p>
+
+    <h2>누가 쓰나요</h2>
+    <p>
+      <strong>{author.name}</strong> — {author.intro}
+    </p>
+
+    <h2>어떤 기준으로 쓰나요</h2>
+    <ol>
+      {EDITORIAL_PRINCIPLES.map((p) => (
+        <li><strong>{p.title}.</strong> {p.body}</li>
+      ))}
+    </ol>
+
+    <h2>이건 못 해요</h2>
+    <p>
+      저희는 세무사·변호사·노무사 같은 <strong>전문 자격을 가진 상담처가 아니에요.</strong> 글은 일반적인
+      정보 제공이 목적이고, 개별 사건의 최종 판단은 담당 기관이나 자격을 가진 전문가에게 확인해야 해요.
+      확인하지 못한 부분은 “확인하지 못했다”고 그대로 밝혀요.
+    </p>
+
+    <h2>수익은 이렇게 나요</h2>
+    <p>
+      이 사이트는 {ADSENSE.clientId ? "Google 애드센스 광고" : "광고(예정)"}로 운영돼요.{" "}
+      <strong>광고와 글의 내용은 서로 무관해요.</strong> 특정 상품·기관을 좋게 써 주는 대가를 받지 않고,
+      제휴·협찬 관계도 없어요. 광고는 글과 분리해서 표시돼요.
+    </p>
+
+    <h2>오류를 발견하면</h2>
+    <p>
+      틀린 내용이나 바뀐 정보를 발견하면 <a href={`mailto:${SITE.email}`}>{SITE.email}</a> 로 알려주세요.
+      확인해서 고치고, 수정일을 남길게요. 문의는 <a href="/contact/">문의 페이지</a>에서도 가능해요.
+    </p>
+  </article>
+</BaseLayout>

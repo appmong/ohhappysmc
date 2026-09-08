@@ -1,0 +1,66 @@
+---
+import { fmtDate, isoDate } from "../lib/utils";
+import type { Author } from "../site.config";
+
+interface Props {
+  author: Author;
+  publishDate: Date;
+  updatedDate?: Date;
+  sourceCheckedDate?: Date;
+  sourceCount?: number;
+  readingMinutes?: number;
+}
+const {
+  author,
+  publishDate,
+  updatedDate,
+  sourceCheckedDate,
+  sourceCount = 0,
+  readingMinutes,
+} = Astro.props;
+---
+
+<div class="metaline">
+  <span class="author">{author.name}</span>
+  <span class="dot">·</span>
+  <time datetime={isoDate(publishDate)}>발행 {fmtDate(publishDate)}</time>
+  {updatedDate && (
+    <>
+      <span class="dot">·</span>
+      <time datetime={isoDate(updatedDate)}>수정 {fmtDate(updatedDate)}</time>
+    </>
+  )}
+  {sourceCheckedDate && (
+    <>
+      <span class="dot">·</span>
+      <span class="checked">원문확인 {fmtDate(sourceCheckedDate)}</span>
+    </>
+  )}
+  {sourceCount > 0 && (
+    <>
+      <span class="dot">·</span>
+      <span class="badge" title="글에서 확인한 원문 출처 수">출처 {sourceCount}</span>
+    </>
+  )}
+  {readingMinutes && (
+    <>
+      <span class="dot">·</span>
+      <span>{readingMinutes}분 읽기</span>
+    </>
+  )}
+</div>
+
+<style>
+  .metaline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--text-mute);
+    margin: 10px 0 4px;
+  }
+  .metaline .author { font-weight: 700; color: var(--text-soft); }
+  .metaline .checked { color: var(--ok); }
+  .metaline .dot { color: var(--border-strong); }
+</style>

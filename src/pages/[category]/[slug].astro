@@ -1,0 +1,45 @@
+---
+import { getCollection, render } from "astro:content";
+import PostLayout from "../../layouts/PostLayout.astro";
+
+export async function getStaticPaths() {
+  const posts = (await getCollection("posts")).filter((p) => !p.data.draft);
+
+  return posts.map((post) => {
+    // 같은 카테고리 최신 글 → 부족하면 전체 최신으로 보충 (최대 6개)
+    const sameCat = posts
+      .filter((p) => p.id !== post.id && p.data.category === post.data.category)
+      .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+    const others = posts
+      .filter((p) => p.id !== post.id && p.data.category !== post.data.category)
+      .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+    const related = [...sameCat, ...others].slice(0, 6).map((p) => ({
+      id: p.id,
+      category: p.data.category,
+      title: p.data.title,
+    }));
+
+    return {
+      params: { category: post.data.category, slug: post.id },
+      props: { post, related },
+    };
+  });
+}
+
+const { post, related } = Astro.props;
+const { Content, headings } = await render(post);
+
+const tocHeadings = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ text: h.text, slug: h.slug }));
+---
+
+<PostLayout
+  id={post.id}
+  data={post.data}
+  headings={tocHeadings}
+  related={related}
+  ogImage={post.data.thumb ? `/og/${post.data.thumb}.png` : undefined}
+>
+  <Content />
+</PostLayout>

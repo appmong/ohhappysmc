@@ -1,0 +1,106 @@
+---
+import { SITE, CATEGORIES } from "../site.config";
+import { categoryUrl } from "../lib/utils";
+import SearchBox from "./SearchBox.astro";
+---
+
+<header class="site-header">
+  <div class="bar">
+    <a href="/" class="brand" aria-label={SITE.name}>
+      <svg class="brand-mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect x="2" y="2" width="28" height="28" rx="8"></rect>
+        <path class="mark-check" d="M6.5 16.5 H11 L13.5 10.5 L17 22 L19.5 16.5 H25.5"></path>
+      </svg>
+      <span class="brand-text">{SITE.name}</span>
+    </a>
+
+    <nav class="nav" aria-label="주요 카테고리">
+      {CATEGORIES.map((c) => (
+        <a href={categoryUrl(c.slug)}>{c.name}</a>
+      ))}
+    </nav>
+
+    <div class="actions">
+      <button class="icon-btn" type="button" aria-label="검색" data-search-open>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+          <path d="M20 20 L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="다크/라이트 모드 전환">
+        <svg class="i-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 14.5A8 8 0 1 1 9.5 4 6.2 6.2 0 0 0 20 14.5Z" fill="currentColor"></path>
+        </svg>
+        <svg class="i-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" fill="currentColor"></circle>
+          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 2.5V5"></path><path d="M12 19V21.5"></path>
+            <path d="M2.5 12H5"></path><path d="M19 12H21.5"></path>
+            <path d="M5.1 5.1 6.8 6.8"></path><path d="M17.2 17.2 18.9 18.9"></path>
+            <path d="M18.9 5.1 17.2 6.8"></path><path d="M6.8 17.2 5.1 18.9"></path>
+          </g>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<SearchBox />
+
+<script>
+  // 다크/라이트 토글
+  const btn = document.getElementById("theme-toggle");
+  btn?.addEventListener("click", () => {
+    const root = document.documentElement;
+    const cur = root.getAttribute("data-theme");
+    const effective =
+      cur || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = effective === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch (e) {}
+  });
+</script>
+
+<style>
+  .brand { display: inline-flex; align-items: center; gap: 9px; }
+  .brand-mark { flex: none; display: block; }
+  .brand-mark rect { fill: var(--accent); }
+  .brand-mark .mark-check {
+    fill: none; stroke: #fff; stroke-width: 3.2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .brand-text { font-weight: 800; letter-spacing: -0.02em; }
+  .brand-accent { color: var(--accent); }
+
+  .nav { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+
+  .actions { display: flex; align-items: center; gap: 4px; margin-left: 8px; }
+  .icon-btn {
+    display: inline-grid; place-items: center;
+    width: 38px; height: 38px; padding: 0;
+    border: 1px solid transparent; border-radius: 9px;
+    background: transparent; color: var(--text-soft); cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--bg-soft); color: var(--text); }
+
+  /* 테마별 아이콘 표시 (토큰 로직과 동일하게 3상태 대응) */
+  .i-sun { display: none; }
+  .i-moon { display: block; }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .i-moon { display: none; }
+    :global(:root:not([data-theme="light"])) .i-sun { display: block; }
+  }
+  :global(:root[data-theme="dark"]) .i-moon { display: none; }
+  :global(:root[data-theme="dark"]) .i-sun { display: block; }
+  :global(:root[data-theme="light"]) .i-moon { display: block; }
+  :global(:root[data-theme="light"]) .i-sun { display: none; }
+
+  @media (max-width: 560px) {
+    .brand-text { display: none; }
+    .nav { gap: 2px; margin-left: 6px; }
+    .nav a { padding: 6px 7px; font-size: 13px; }
+    .actions { margin-left: auto; }
+  }
+</style>

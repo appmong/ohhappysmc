@@ -1,0 +1,164 @@
+---
+import { getCollection } from "astro:content";
+import { CATEGORY_MAP } from "../site.config";
+import { postUrl } from "../lib/utils";
+
+const posts = (await getCollection("posts"))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+
+const index = posts.map((p) => {
+  const cat = CATEGORY_MAP[p.data.category];
+  return {
+    t: p.data.title,
+    d: p.data.description,
+    c: cat?.name ?? p.data.category,
+    e: cat?.emoji ?? "📄",
+    u: postUrl(p.data.category, p.id),
+    th: p.data.thumb ? `/shots/${p.data.thumb}/thumb-wide.webp` : null,
+    k: [p.data.title, p.data.description, cat?.name, ...(p.data.tags ?? [])]
+      .join(" ")
+      .toLowerCase(),
+  };
+});
+---
+
+<dialog id="search-dialog" class="search-dialog" aria-label="사이트 검색">
+  <div class="sd-inner">
+    <div class="sd-top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+        <path d="M20 20 L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="검색어를 입력하세요 (제목·키워드)"
+        autocomplete="off"
+        aria-label="검색어"
+      />
+      <button id="search-close" class="sd-close" type="button" aria-label="닫기">Esc</button>
+    </div>
+    <div id="search-results" class="sd-results" role="listbox" aria-label="검색 결과"></div>
+  </div>
+</dialog>
+
+<script type="application/json" id="search-index" is:inline set:html={JSON.stringify(index)}></script>
+
+<script>
+  type Item = { t: string; d: string; c: string; e: string; u: string; th: string | null; k: string };
+
+  const dialog = document.getElementById("search-dialog") as HTMLDialogElement | null;
+  const closeBtn = document.getElementById("search-close");
+  const input = document.getElementById("search-input") as HTMLInputElement | null;
+  const results = document.getElementById("search-results");
+  const raw = document.getElementById("search-index")?.textContent || "[]";
+  let items: Item[] = [];
+  try { items = JSON.parse(raw); } catch (e) { items = []; }
+
+  function esc(s: string) {
+    return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+  }
+
+  function render(list: Item[], q: string) {
+    if (!results) return;
+    if (!q) {
+      results.innerHTML = `<p class="sd-hint">글 제목·내용·카테고리로 검색해요. 전체 ${items.length}편.</p>`;
+      return;
+    }
+    if (list.length === 0) {
+      results.innerHTML = `<p class="sd-hint">‘${esc(q)}’에 대한 결과가 없어요.</p>`;
+      return;
+    }
+    results.innerHTML = list
+      .map(
+        (it) => `<a class="sd-item" href="${it.u}" role="option">
+          <span class="sd-thumb">${it.th ? `<img src="${it.th}" alt="" loading="lazy" width="72" height="41">` : `<span class="sd-emoji">${it.e}</span>`}</span>
+          <span class="sd-text">
+            <span class="sd-cat">${esc(it.c)}</span>
+            <span class="sd-title">${esc(it.t)}</span>
+            <span class="sd-desc">${esc(it.d)}</span>
+          </span>
+        </a>`
+      )
+      .join("");
+  }
+
+  function search() {
+    const q = (input?.value || "").trim().toLowerCase();
+    if (!q) return render([], "");
+    const list = items.filter((it) => q.split(/\s+/).every((w) => it.k.includes(w))).slice(0, 12);
+    render(list, q);
+  }
+
+  function open(prefill = "") {
+    if (!dialog) return;
+    dialog.showModal();
+    if (input) input.value = prefill;
+    search();
+    if (input) input.focus();
+  }
+  function close() { dialog?.close(); }
+
+  // 여러 트리거 지원: 헤더 버튼, 히어로 검색바, 인기 검색어 칩
+  document.querySelectorAll("[data-search-open]").forEach((el) => {
+    el.addEventListener("click", () => open(el.getAttribute("data-search-q") || ""));
+  });
+  closeBtn?.addEventListener("click", close);
+  input?.addEventListener("input", search);
+  // 배경 클릭 시 닫기
+  dialog?.addEventListener("click", (e) => { if (e.target === dialog) close(); });
+  // 단축키: / 또는 Ctrl/⌘+K
+  document.addEventListener("keydown", (e) => {
+    if ((e.key === "/" && !/input|textarea/i.test((e.target as HTMLElement)?.tagName || "")) ||
+        ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) {
+      e.preventDefault();
+      open();
+    }
+  });
+</script>
+
+<style is:global>
+  .search-dialog {
+    width: min(640px, calc(100vw - 32px));
+    max-width: 640px;
+    margin: 10vh auto auto;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+  .search-dialog::backdrop { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); }
+  .sd-inner { display: flex; flex-direction: column; max-height: 70vh; }
+  .sd-top {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-mute);
+  }
+  #search-input {
+    flex: 1; border: 0; outline: none; background: transparent;
+    font-size: 16px; color: var(--text); font-family: inherit;
+  }
+  .sd-close {
+    border: 1px solid var(--border); background: var(--bg-soft); color: var(--text-mute);
+    font-size: 12px; padding: 3px 8px; border-radius: 6px; cursor: pointer;
+  }
+  .sd-results { overflow-y: auto; padding: 8px; }
+  .sd-hint { color: var(--text-mute); font-size: 14px; padding: 18px 10px; margin: 0; }
+  .sd-item {
+    display: flex; gap: 12px; padding: 10px; border-radius: 10px;
+    color: var(--text); align-items: center;
+  }
+  .sd-item:hover { background: var(--bg-soft); text-decoration: none; }
+  .sd-thumb {
+    flex: none; width: 72px; height: 41px; border-radius: 6px; overflow: hidden;
+    background: var(--bg-soft); display: grid; place-items: center;
+  }
+  .sd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .sd-emoji { font-size: 20px; }
+  .sd-text { display: grid; gap: 1px; min-width: 0; }
+  .sd-cat { font-size: 11.5px; font-weight: 700; color: var(--accent-ink); }
+  .sd-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sd-desc { font-size: 13px; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>

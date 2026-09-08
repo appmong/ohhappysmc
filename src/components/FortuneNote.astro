@@ -1,0 +1,147 @@
+---
+import { FORTUNE_NOTES } from "../site.config";
+
+// 서버에서 미리 하나 골라 초기 렌더 (JS 꺼져 있어도 문구가 보이게)
+const seed = new Date().getFullYear() * 366 + Math.floor(
+  (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000,
+);
+const initial = FORTUNE_NOTES[seed % FORTUNE_NOTES.length];
+---
+
+<section class="fortune" data-state="open" aria-label="오늘의 쪽지">
+  <!-- 닫힌 상태: 클릭 유도 (JS가 있을 때만 노출) -->
+  <button class="fc-cover" type="button" data-open aria-label="오늘의 쪽지 열기">
+    <span class="fc-cookie" aria-hidden="true">🥠</span>
+    <span class="fc-cta">
+      <span class="fc-cta-t">오늘의 혜택 쪽지</span>
+      <span class="fc-cta-s">톡! 눌러서 오늘의 팁 확인하기</span>
+    </span>
+    <span class="fc-arrow" aria-hidden="true">→</span>
+  </button>
+
+  <!-- 열린 상태: 쪽지 -->
+  <div class="fc-body">
+    <div class="fc-head">
+      <span class="tag"><span aria-hidden="true">🥠</span> 오늘의 쪽지</span>
+      <button type="button" class="redraw" data-redraw>다른 쪽지 뽑기 🔄</button>
+    </div>
+    <p class="note" data-note>{initial}</p>
+  </div>
+</section>
+
+<script is:inline define:vars={{ notes: FORTUNE_NOTES }}>
+  (function () {
+    const root = document.querySelector(".fortune");
+    const note = document.querySelector("[data-note]");
+    const cover = document.querySelector("[data-open]");
+    const redraw = document.querySelector("[data-redraw]");
+    if (!root || !note) return;
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    let openedToday = false;
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("fortune") || "null");
+      if (saved && saved.date === todayKey && saved.text) {
+        note.textContent = saved.text;
+        openedToday = true;
+      }
+    } catch (e) {}
+
+    // 오늘 아직 안 열었으면 닫힌(쿠키) 상태로 시작해 클릭을 유도
+    if (!openedToday) root.setAttribute("data-state", "closed");
+
+    function pickRandom() {
+      return notes[Math.floor(Math.random() * notes.length)];
+    }
+    function setNote(text) {
+      note.style.opacity = "0";
+      setTimeout(function () {
+        note.textContent = text;
+        note.style.opacity = "1";
+      }, 150);
+      try {
+        localStorage.setItem("fortune", JSON.stringify({ date: todayKey, text }));
+      } catch (e) {}
+    }
+    function open() {
+      const text = pickRandom();
+      root.setAttribute("data-state", "open");
+      note.textContent = text;
+      try {
+        localStorage.setItem("fortune", JSON.stringify({ date: todayKey, text }));
+      } catch (e) {}
+    }
+
+    cover && cover.addEventListener("click", open);
+    redraw && redraw.addEventListener("click", function () { setNote(pickRandom()); });
+  })();
+</script>
+
+<style>
+  .fortune {
+    position: relative;
+    margin: 22px 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background:
+      radial-gradient(120% 140% at 100% 0%, var(--accent-soft), transparent 60%),
+      var(--bg-card);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* 상태 전환 */
+  .fortune[data-state="closed"] .fc-body { display: none; }
+  .fortune[data-state="open"] .fc-cover { display: none; }
+
+  /* 닫힌 커버 (클릭 유도) */
+  .fc-cover {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    padding: 16px 20px; border: 0; background: transparent; cursor: pointer;
+    text-align: left; color: var(--text); font-family: inherit;
+  }
+  .fc-cookie {
+    font-size: 34px; line-height: 1; flex: none;
+    animation: fc-wobble 2.4s ease-in-out infinite; transform-origin: 50% 70%;
+  }
+  .fc-cta { display: grid; gap: 2px; flex: 1; }
+  .fc-cta-t { font-weight: 800; font-size: 16px; letter-spacing: -0.01em; }
+  .fc-cta-s { font-size: 13.5px; color: var(--text-mute); }
+  .fc-arrow { color: var(--accent); font-weight: 800; font-size: 18px; transition: transform 0.2s; }
+  .fc-cover:hover .fc-arrow { transform: translateX(4px); }
+  .fc-cover:hover .fc-cta-t { color: var(--accent); }
+
+  @keyframes fc-wobble {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(8deg); }
+  }
+
+  /* 열린 쪽지 */
+  .fc-body { padding: 16px 20px; animation: fc-reveal 0.35s ease both; }
+  @keyframes fc-reveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .tag {
+    font-size: 12.5px; font-weight: 800; color: var(--accent-ink);
+    background: var(--accent-soft); padding: 4px 11px; border-radius: 999px;
+  }
+  .redraw {
+    font-size: 13px; color: var(--text-soft); background: var(--bg-soft);
+    border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    font-family: inherit;
+  }
+  .redraw:hover { border-color: var(--accent); color: var(--accent); }
+  .note {
+    margin: 0; font-size: 17px; font-weight: 600; line-height: 1.6;
+    transition: opacity 0.15s ease;
+    padding-left: 14px; border-left: 3px solid var(--accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fc-cookie { animation: none; }
+    .fc-body { animation: none; }
+  }
+</style>

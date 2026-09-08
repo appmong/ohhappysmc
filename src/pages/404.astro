@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { CATEGORIES } from "../site.config";
+import { categoryUrl } from "../lib/utils";
+---
+
+<BaseLayout title="페이지를 찾을 수 없어요" noindex={true}>
+  <article class="container prose center" style="padding:48px 20px;">
+    <h1>404</h1>
+    <p class="lead">찾으시는 페이지가 없어요. 주소가 바뀌었거나 삭제됐을 수 있어요.</p>
+    <p><a href="/" class="btn">홈으로 가기</a></p>
+    <p class="small muted" style="margin-top:28px;">카테고리로 둘러보기</p>
+    <p>
+      {CATEGORIES.map((c) => (
+        <a href={categoryUrl(c.slug)} style="margin:0 8px;">{c.name}</a>
+      ))}
+    </p>
+  </article>
+</BaseLayout>

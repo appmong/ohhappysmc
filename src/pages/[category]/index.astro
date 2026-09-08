@@ -1,0 +1,60 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import PostCard from "../../components/PostCard.astro";
+import { CATEGORIES, CATEGORY_MAP } from "../../site.config";
+import { categoryUrl } from "../../lib/utils";
+
+export async function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { category: c.slug } }));
+}
+
+const { category } = Astro.params;
+const cat = CATEGORY_MAP[category!];
+
+const posts = (await getCollection("posts"))
+  .filter((p) => !p.data.draft && p.data.category === category)
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+---
+
+<BaseLayout
+  title={`${cat?.name} 글 모음`}
+  description={cat?.description}
+  canonicalPath={categoryUrl(category!)}
+>
+  <div class="container-wide">
+    <Breadcrumb items={[{ name: cat?.name ?? category! }]} />
+
+    <header class="cat-header">
+      <h1><span aria-hidden="true">{cat?.emoji}</span> {cat?.name}</h1>
+      <p class="desc">{cat?.description}</p>
+    </header>
+
+    {posts.length === 0 ? (
+      <p class="empty">아직 발행된 글이 없어요. 곧 채워질 예정이에요.</p>
+    ) : (
+      <div class="grid">
+        {posts.map((p) => (
+          <PostCard
+            id={p.id}
+            category={p.data.category}
+            title={p.data.title}
+            description={p.data.description}
+            publishDate={p.data.publishDate}
+            status={p.data.status}
+            thumb={p.data.thumb}
+          />
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .cat-header { margin: 12px 0 28px; }
+  .cat-header h1 { font-size: 30px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .cat-header .desc { color: var(--text-soft); margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+  .empty { color: var(--text-mute); padding: 40px 0; text-align: center; }
+</style>

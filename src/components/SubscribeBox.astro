@@ -1,0 +1,97 @@
+---
+import { NEWSLETTER } from "../site.config";
+
+const demo = !NEWSLETTER.endpoint;
+---
+
+{NEWSLETTER.enabled && (
+<section class="subscribe card" aria-label="구독">
+  <div class="body">
+    <h3>{NEWSLETTER.title}</h3>
+    <p class="desc">{NEWSLETTER.desc}</p>
+
+    <form class="form" data-subscribe data-endpoint={NEWSLETTER.endpoint} data-demo={String(demo)} novalidate>
+      <label class="sr-only" for="sub-email">이메일 주소</label>
+      <input
+        id="sub-email"
+        type="email"
+        name="email"
+        inputmode="email"
+        autocomplete="email"
+        placeholder="이메일 주소"
+        required
+      />
+      <button type="submit" class="btn">구독</button>
+    </form>
+    <p class="msg" data-msg role="status" aria-live="polite"></p>
+    <p class="fine">언제든 한 번의 클릭으로 구독을 해지할 수 있어요. 개인정보는 <a href="/privacy/">방침</a>에 따라 처리해요.</p>
+  </div>
+</section>
+)}
+
+<script is:inline>
+  (function () {
+    const form = document.querySelector("[data-subscribe]");
+    if (!form) return;
+    const input = form.querySelector('input[name="email"]');
+    const msg = document.querySelector("[data-msg]");
+    const endpoint = form.getAttribute("data-endpoint");
+    const demo = form.getAttribute("data-demo") === "true";
+
+    function show(text, ok) {
+      if (!msg) return;
+      msg.textContent = text;
+      msg.style.color = ok ? "var(--ok)" : "var(--danger)";
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const email = (input && input.value ? input.value : "").trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!valid) {
+        show("이메일 주소를 다시 확인해 주세요.", false);
+        return;
+      }
+
+      if (demo || !endpoint) {
+        // 엔드포인트 미설정 — 데모 모드
+        show("구독 기능은 준비 중이에요. 곧 열릴게요!", true);
+        if (input) input.value = "";
+        return;
+      }
+
+      try {
+        show("등록 중…", true);
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        if (res.ok) {
+          show("구독 완료! 확인 메일을 보냈어요.", true);
+          if (input) input.value = "";
+        } else {
+          show("잠시 후 다시 시도해 주세요.", false);
+        }
+      } catch (err) {
+        show("네트워크 오류예요. 잠시 후 다시 시도해 주세요.", false);
+      }
+    });
+  })();
+</script>
+
+<style>
+  .subscribe { padding: 22px 24px; margin: 32px 0; border-left: 4px solid var(--accent); }
+  .subscribe h3 { margin: 0 0 6px; font-size: 19px; }
+  .desc { margin: 0 0 14px; color: var(--text-soft); font-size: 14.5px; }
+  .form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .form input {
+    flex: 1 1 220px; min-width: 0; padding: 10px 14px; font-size: 15px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--bg); color: var(--text);
+  }
+  .form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .form .btn { flex: 0 0 auto; }
+  .msg { margin: 10px 0 0; font-size: 14px; min-height: 1.2em; }
+  .fine { margin: 10px 0 0; font-size: 12px; color: var(--text-mute); }
+</style>

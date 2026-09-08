@@ -1,0 +1,48 @@
+---
+import { fmtDate } from "../lib/utils";
+
+interface Source {
+  title: string;
+  org: string;
+  url: string;
+}
+interface Props {
+  sources: Source[];
+  checkedDate?: Date;
+}
+const { sources, checkedDate } = Astro.props;
+const show = Array.isArray(sources) && sources.length > 0;
+---
+
+{show && (
+<section class="verify card" aria-label="검증 노트">
+  <div class="head">
+    <span class="tag">검증 노트</span>
+  </div>
+  <p class="lead">
+    {checkedDate ? fmtDate(checkedDate) : "최근"}에 아래 원문 {sources.length}건을 다시 확인했어요.
+  </p>
+  <ul>
+    {sources.map((s) => (
+      <li>
+        <a href={s.url} target="_blank" rel="noopener nofollow">{s.title}</a>
+        <span class="org">{s.org}</span>
+      </li>
+    ))}
+  </ul>
+</section>
+)}
+
+<style>
+  .verify { padding: 18px 20px; margin: 32px 0; border: 1px dashed var(--border-strong); }
+  .head { margin-bottom: 6px; }
+  .tag {
+    display: inline-block; font-size: 12.5px; font-weight: 800;
+    color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, transparent);
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .lead { font-size: 14.5px; color: var(--text-soft); margin: 6px 0 12px; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: 15px; }
+  .org { font-size: 12.5px; color: var(--text-mute); }
+</style>

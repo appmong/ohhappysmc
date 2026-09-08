@@ -1,0 +1,30 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE } from "../site.config";
+---
+
+<BaseLayout title="문의" description={`${SITE.name}에 문의하거나 오류를 제보하는 방법을 안내합니다.`}>
+  <article class="container prose">
+    <h1>문의</h1>
+    <p class="lead">궁금한 점, 오류 제보, 다뤄줬으면 하는 주제 모두 환영해요.</p>
+
+    <h2>이메일</h2>
+    <p>
+      아래 주소로 보내주시면 확인하는 대로 답변드려요.
+    </p>
+    <p style="font-size:19px;font-weight:700;">
+      <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+    </p>
+
+    <h2>이런 걸 보내주세요</h2>
+    <ul>
+      <li>글에서 발견한 <strong>틀린 정보나 바뀐 규정</strong> — 가능하면 원문 링크와 함께요.</li>
+      <li>다뤄줬으면 하는 <strong>주제 제안</strong>.</li>
+      <li>제휴·광고 문의.</li>
+    </ul>
+
+    <p class="muted small">
+      * 개별 사안에 대한 법률·세무 상담은 도와드릴 수 없어요. 자격을 가진 전문가에게 문의하세요.
+    </p>
+  </article>
+</BaseLayout>
