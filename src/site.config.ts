@@ -32,7 +32,7 @@ export const VERIFICATION = {
 // ─────────────────────────────────────────────────────────────
 export const ADSENSE = {
   /** ca-pub-XXXXXXXXXXXXXXXX (승인 신청 시 발급). 비우면 스크립트/ads.txt 미삽입 */
-  clientId: "",
+  clientId: "ca-pub-8144619202927627",
 } as const;
 
 // ─────────────────────────────────────────────────────────────
