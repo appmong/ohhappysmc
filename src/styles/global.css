@@ -175,6 +175,9 @@ a:hover { text-decoration: underline; }
 .prose p { margin: 14px 0; }
 .prose ul, .prose ol { padding-left: 22px; }
 .prose li { margin: 6px 0; }
+.prose img { display: block; width: 100%; height: auto; border-radius: 14px; margin: 22px 0 6px; }
+.prose p:has(> img) { margin-bottom: 22px; }
+.prose p > img + em { display: block; font-style: normal; font-size: 13px; color: var(--text-mute); text-align: center; }
 .prose blockquote {
   margin: 18px 0; padding: 4px 18px; border-left: 4px solid var(--accent);
   background: var(--accent-soft); border-radius: 0 8px 8px 0; color: var(--text-soft);
